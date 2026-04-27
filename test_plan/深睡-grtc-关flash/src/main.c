@@ -38,6 +38,9 @@ static void blink_led_once(void)
 	k_msleep(BOOT_BLINK_ON_MS);
 	gpio_pin_set_dt(&led, 0);
 	k_msleep(BOOT_BLINK_OFF_MS);
+
+	/* Disconnect LED pin to prevent GPIO output driver leakage in system off */
+	gpio_pin_configure_dt(&led, GPIO_DISCONNECTED);
 }
 
 static int print_reset_cause(uint32_t reset_cause)
