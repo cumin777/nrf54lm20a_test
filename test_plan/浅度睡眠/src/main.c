@@ -202,7 +202,7 @@ int main(void)
 			/* Resume console for printing */
 			pm_device_action_run(cons, PM_DEVICE_ACTION_RESUME);
 
-			gpio_pin_set_dt(&led, 1);
+			gpio_pin_set_dt(&led, 0);
 			printk("Active mode, wake count=%u\n", wake_count);
 
 			while (!sleeping) {
@@ -214,7 +214,7 @@ int main(void)
 			}
 		}
 
-		gpio_pin_set_dt(&led, 0);
+		gpio_pin_set_dt(&led, 1);
 		printk("Entering shallow sleep, wake count=%u\n", wake_count);
 
 		/* Suspend console before sleeping to save power */

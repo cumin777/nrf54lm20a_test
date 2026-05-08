@@ -1,0 +1,31 @@
+/*
+ * W25Q128JV SPI demo wiring on XIAO nRF54LM20A
+ * SCK  -> D8  (P1.04)
+ * MISO -> D9  (P1.05)
+ * MOSI -> D10 (P1.06)
+ * CS   -> D1  (P1.31)
+ */
+
+&spi23 {
+	status = "okay";
+	cs-gpios = <&gpio1 31 GPIO_ACTIVE_LOW>;
+
+	w25q128jv: w25q128jv@0 {
+		compatible = "jedec,spi-nor";
+		status = "okay";
+		reg = <0>;
+		spi-max-frequency = <8000000>;
+		use-fast-read;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			w25q128jv_demo_partition: partition@0 {
+				label = "w25q128jv_demo";
+				reg = <0x00000000 0x00010000>;
+			};
+		};
+	};
+};

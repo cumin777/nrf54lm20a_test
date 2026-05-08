@@ -1,0 +1,26 @@
+/*
+ * GY-BMP280 SPI wiring on XIAO nRF54LM20A
+ *
+ *   VCC      -> 3V3
+ *   GND      -> GND
+ *   SCL/SCK  -> D8  (P1.04)
+ *   SDA/SDI  -> D10 (P1.06) MOSI
+ *   SDO      -> D9  (P1.05) MISO
+ *   CSB      -> D1  (P1.31) CS
+ *
+ * Note:
+ *   The GY-BMP280 breakout usually silk-screens the SPI pins as SCL/SDA/SDO/CSB.
+ *   In SPI mode that corresponds to SCK/MOSI/MISO/CS.
+ */
+
+&spi23 {
+	status = "okay";
+	cs-gpios = <&gpio1 31 GPIO_ACTIVE_LOW>;
+
+	bmp280: bmp280@0 {
+		compatible = "bosch,bme280";
+		status = "okay";
+		reg = <0>;
+		spi-max-frequency = <8000000>;
+	};
+};

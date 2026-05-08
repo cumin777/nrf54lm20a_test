@@ -1,0 +1,28 @@
+/*
+ * Grove Barometer Sensor (BMP280) SPI wiring on XIAO nRF54LM20A
+ *
+ * Grove BMP280 module SPI wiring (reconfigure solder pads on module back):
+ *   Module VCC  -> 3V3
+ *   Module GND  -> GND
+ *   Module SCK  -> D8  (P1.04)
+ *   Module SDI  -> D10 (P1.06)  MOSI
+ *   Module SDO  -> D9  (P1.05)  MISO  (solder pad on PCB edge)
+ *   Module CSB  -> D1  (P1.31)  CS    (solder pad on PCB edge)
+ *
+ * Note: Default Grove connector is I2C only (4 pins: VCC,GND,SDA,SCL).
+ *       For SPI mode, you must:
+ *       1. Cut/unsolder the I2C solder jumpers on the module back
+ *       2. Solder the SPI solder jumpers instead
+ *       3. Add wires to the SDO and CSB pads on the PCB edge
+ */
+
+&spi23 {
+	status = "okay";
+	cs-gpios = <&gpio1 31 GPIO_ACTIVE_LOW>;
+
+	bme280: bme280@0 {
+		compatible = "bosch,bme280";
+		reg = <0>;
+		spi-max-frequency = <1000000>;
+	};
+};

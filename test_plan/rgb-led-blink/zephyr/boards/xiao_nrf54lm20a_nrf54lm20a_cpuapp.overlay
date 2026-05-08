@@ -1,0 +1,8 @@
+/*
+ * Disable PWM LED nodes so GPIO control takes precedence.
+ * The board DTS defines blue_led (P1.22), red_led (P1.23), green_led (P1.24).
+ */
+
+&pwm20 {
+	status = "disabled";
+};

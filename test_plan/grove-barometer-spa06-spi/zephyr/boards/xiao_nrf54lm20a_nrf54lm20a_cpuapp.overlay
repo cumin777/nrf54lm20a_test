@@ -1,0 +1,29 @@
+/*
+ * Grove Barometer Sensor (SPA06-003) SPI wiring on XIAO nRF54LM20A
+ *
+ * Wiring:
+ *   Module VCC  -> 3V3
+ *   Module GND  -> GND
+ *   Module SCK  -> D8  (P1.04)
+ *   Module SDI  -> D10 (P1.06) MOSI
+ *   Module SDO  -> D9  (P1.05) MISO
+ *   Module CSB  -> D1  (P1.31) CS
+ *
+ * Module rework required for SPI mode:
+ *   1. Cut the two I2C bus-selection pads on the back.
+ *   2. Use the module's SPI solder pads.
+ *   3. Add wires for SDO and CSB.
+ */
+
+&spi23 {
+	status = "okay";
+	cs-gpios = <&gpio1 31 GPIO_ACTIVE_LOW>;
+
+	spa06: spa06@0 {
+		compatible = "vnd,spi-device";
+		reg = <0>;
+		spi-max-frequency = <100000>;
+		spi-cpol;
+		spi-cpha;
+	};
+};
