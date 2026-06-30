@@ -1,0 +1,8 @@
+/* XIAO nRF54LM20B board overlay — system off (sw0 wakeup) demo.
+ * Enable the on-board external SPI flash (PY25Q128HA) so it can be suspended
+ * into Deep Power-Down before entering system off.
+ */
+
+&py25q128 {
+	status = "okay";
+};

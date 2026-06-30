@@ -19,7 +19,7 @@
 #define BOOT_BLINK_OFF_MS 120
 
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
-static const struct device *const flash_dev = DEVICE_DT_GET(DT_NODELABEL(py25q64));
+static const struct device *const flash_dev = DEVICE_DT_GET(DT_NODELABEL(py25q128));
 
 static void blink_led_once(void)
 {
@@ -70,7 +70,7 @@ static int print_reset_cause(uint32_t reset_cause)
 }
 
 /*
- * SPI pin assignments for PY25Q64HA:
+ * SPI pin assignments for PY25Q128HA:
  *   P2.05 = CS#    -> OUTPUT HIGH  (keep flash deselected, prevent DPD wake)
  *   P2.00 = HOLD#  -> OUTPUT HIGH  (inactive)
  *   P2.03 = WP#    -> OUTPUT HIGH  (inactive)
@@ -131,7 +131,7 @@ static int configure_spi_pins_for_system_off(void)
 
 static int suspend_external_flash(void)
 {
-	const struct device *flash_bus = DEVICE_DT_GET(DT_BUS(DT_NODELABEL(py25q64)));
+	const struct device *flash_bus = DEVICE_DT_GET(DT_BUS(DT_NODELABEL(py25q128)));
 	int rc;
 
 	if (!device_is_ready(flash_dev)) {

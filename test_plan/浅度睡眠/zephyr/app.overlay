@@ -1,12 +1,6 @@
-/ {
-	chosen {
-		zephyr,console = &cdc_acm_uart0;
-		zephyr,shell-uart = &cdc_acm_uart0;
-	};
-};
-
-&zephyr_udc0 {
-	cdc_acm_uart0: cdc_acm_uart0 {
-		compatible = "zephyr,cdc-acm-uart";
-	};
-};
+/* XIAO nRF54LM20B: the board already provides the USB CDC UART
+ * (cdc_acm_uart) as the chosen console, so no app-level console override is
+ * needed. This overlay is intentionally a no-op on 20B. (The previous override
+ * to a self-defined cdc_acm_uart0 node left that node without a backing device
+ * struct, which broke DEVICE_DT_GET(DT_CHOSEN(zephyr_console)).)
+ */
