@@ -5,7 +5,7 @@
 
 if(SB_CONFIG_DTM_NO_DFE)
   add_overlay_dts(
-    direct_test_mode
+    ${DEFAULT_IMAGE}
     ${CMAKE_CURRENT_LIST_DIR}/no-dfe.overlay)
 endif()
 
