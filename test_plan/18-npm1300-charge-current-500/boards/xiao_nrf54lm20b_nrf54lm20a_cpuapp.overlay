@@ -1,0 +1,38 @@
+/*
+ * XIAO nRF54LM20B onboard nPM1300 charger setup.
+ *
+ * The board DTS already defines pmic_i2c, pmic, and pmic_charger.  The
+ * Nordic fuel gauge sample expects npm1300_ek_* labels, so this overlay
+ * aliases the onboard PMIC nodes and overrides the charger current.
+ */
+
+/ {
+	chosen {
+		zephyr,console = &uart21;
+		zephyr,shell-uart = &uart21;
+		zephyr,uart-mcumgr = &uart21;
+		zephyr,bt-mon-uart = &uart21;
+		zephyr,bt-c2h-uart = &uart21;
+	};
+};
+
+&uart21 {
+	status = "okay";
+	current-speed = <115200>;
+};
+
+&pmic_i2c {
+	sda-gpios = <&gpio1 18 GPIO_ACTIVE_HIGH>;
+	scl-gpios = <&gpio1 17 GPIO_ACTIVE_HIGH>;
+	status = "okay";
+};
+
+npm1300_ek_pmic: &pmic {
+};
+
+npm1300_ek_charger: &pmic_charger {
+	current-microamp = <500000>;
+	term-microvolt = <4200000>;
+	vbus-limit-microamp = <1500000>;
+	charging-enable;
+};

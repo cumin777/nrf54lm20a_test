@@ -1,0 +1,17 @@
+sample:
+  name: XIAO nRF54LM20B nPM1300 fuel gauge 800mA
+
+common:
+  integration_platforms:
+    - xiao_nrf54lm20b/nrf54lm20a/cpuapp
+  platform_allow:
+    - xiao_nrf54lm20b/nrf54lm20a/cpuapp
+  tags:
+    - pmic
+    - charger
+    - fuel_gauge
+    - sysbuild
+tests:
+  sample.xiao_nrf54lm20b_npm1300_charge_current:
+    sysbuild: true
+    build_only: true
