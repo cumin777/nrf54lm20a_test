@@ -1,0 +1,10 @@
+sample:
+  name: XIAO nRF54LM20B USB CDC blink
+tests:
+  sample.board.xiao_nrf54lm20b.usb_cdc_blink:
+    platform_allow:
+      - xiao_nrf54lm20b/nrf54lm20a/cpuapp
+    tags:
+      - usb
+      - cdc_acm
+      - gpio
