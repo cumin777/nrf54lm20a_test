@@ -1,0 +1,11 @@
+/* XIAO nRF54LM20B ship mode overlay.
+ * The 20B board dtsi already wires pmic_i2c (gpio-i2c, P1.18=SDA / P1.17=SCL)
+ * and enables it, with the nPM1300 regulators node at
+ * /pmic-i2c/npm1300@6b/regulators. Only the regulator-parent alias is needed.
+ */
+
+/ {
+	aliases {
+		regulator-parent = &{/pmic-i2c/npm1300@6b/regulators};
+	};
+};

@@ -1,0 +1,17 @@
+/* XIAO nRF54LM20A ship mode overlay.
+ * On this board, ship mode is controlled by the external nPM1300 PMIC instead
+ * of an SoC internal regulator parent. Point the sample's regulator-parent
+ * alias at the PMIC regulators node and fix the PMIC GPIO-I2C wiring to match
+ * the schematic: SDA = P1.18, SCL = P1.17.
+ */
+
+&pmic_i2c {
+	sda-gpios = <&gpio1 18 GPIO_ACTIVE_HIGH>;
+	scl-gpios = <&gpio1 17 GPIO_ACTIVE_HIGH>;
+};
+
+/ {
+	aliases {
+		regulator-parent = &{/pmic-i2c/npm1300@6b/regulators};
+	};
+};
