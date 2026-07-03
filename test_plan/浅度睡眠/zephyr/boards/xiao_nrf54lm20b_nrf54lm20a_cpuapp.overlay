@@ -1,19 +1,25 @@
 /* XIAO nRF54LM20B board overlay — shallow sleep demo.
- * Enable the on-board external SPI flash (PY25Q128HA) so it can be suspended
- * into Deep Power-Down by the demo, and disable unused peripherals to minimise
- * idle current. usbhs is intentionally left enabled: on the 20B board the
- * console is the USB CDC UART (child of usbhs); the app suspends the console
- * device at runtime instead.
+ * Enable the on-board external SPI flash (PY25Q128HA) at a conservative 8 MHz
+ * so the spi-nor driver probes it at boot (the board dtsi default of 133 MHz
+ * makes the boot-time JEDEC/SFDP probe fail -> device not ready -> the flash
+ * never enters DPD) and the demo can then suspend it into Deep Power-Down.
+ * Disable unused peripherals to minimise idle current. &uart21 (the chosen
+ * console) is kept enabled.
  */
+
+&spi00 {
+	status = "okay";
+	cs-gpios = <&gpio2 5 GPIO_ACTIVE_LOW>;
+};
 
 &py25q128 {
 	status = "okay";
+	spi-max-frequency = <8000000>;
+	wp-gpios = <&gpio2 3 GPIO_ACTIVE_LOW>;
+	hold-gpios = <&gpio2 0 GPIO_ACTIVE_LOW>;
 };
 
-/* Note: &uart21 is left enabled — on the 20B board it is the chosen console
- * (zephyr,console = &uart21). The 20A overlay disabled it, but that breaks
- * DEVICE_DT_GET(DT_CHOSEN(zephyr_console)) here.
- */
+/* &uart21 is the chosen console (zephyr,console = &uart21); keep it enabled. */
 
 &spi23 {
 	status = "disabled";
