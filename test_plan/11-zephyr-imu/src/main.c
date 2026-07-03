@@ -291,7 +291,6 @@ static int test_polling_mode(const struct device *dev)
 
 int main(void)
 {
-	const struct device *const dev = DEVICE_DT_GET(IMU_NODE);
 	int ret;
 
 	ret = enable_imu_power();
@@ -299,6 +298,8 @@ int main(void)
 		LOG_ERR("Failed to enable IMU power: %d", ret);
 		return 0;
 	}
+
+	const struct device *const dev = DEVICE_DT_GET(IMU_NODE);
 
 	if (!device_is_ready(dev)) {
 		ret = device_init(dev);
