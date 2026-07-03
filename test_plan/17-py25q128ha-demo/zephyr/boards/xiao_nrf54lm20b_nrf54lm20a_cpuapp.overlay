@@ -1,0 +1,30 @@
+/* XIAO nRF54LM20B overlay for the PY25Q flash R/W demo.
+ * The 20B board mounts PY25Q128HA (node py25q128) on &spi00 (same wiring as
+ * 20A: CS=P2.05, CLK=P2.01, IO0=P2.02/MOSI, IO1=P2.04/MISO, IO2=P2.03/WP#,
+ * IO3=P2.00/HOLD#). Use a conservative 8 MHz SPI clock (the board dtsi default
+ * of 133 MHz can make the boot-time JEDEC/SFDP probe fail -> device not ready).
+ * Partition label kept as py25q128_demo_partition so main.c needs no change.
+ */
+
+&spi00 {
+	status = "okay";
+	cs-gpios = <&gpio2 5 GPIO_ACTIVE_LOW>;
+};
+
+&py25q128 {
+	status = "okay";
+	spi-max-frequency = <8000000>;
+	wp-gpios = <&gpio2 3 GPIO_ACTIVE_LOW>;
+	hold-gpios = <&gpio2 0 GPIO_ACTIVE_LOW>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		py25q128_demo_partition: partition@0 {
+			label = "py25q128_demo";
+			reg = <0x00000000 0x00010000>;
+		};
+	};
+};

@@ -8,9 +8,9 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/storage/flash_map.h>
 
-LOG_MODULE_REGISTER(py25q64_demo, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(py25q128_demo, CONFIG_LOG_DEFAULT_LEVEL);
 
-#define DEMO_PARTITION_NODE DT_NODELABEL(py25q64_demo_partition)
+#define DEMO_PARTITION_NODE DT_NODELABEL(py25q128_demo_partition)
 #define TEST_AREA_SIZE 4096U
 
 static const struct device *const flash_dev =
@@ -50,7 +50,7 @@ int main(void)
 	const struct flash_parameters *params;
 	struct flash_pages_info page_info;
 
-	LOG_INF("================ PY25Q64HA demo ================");
+	LOG_INF("================ PY25Q128HA demo ================");
 	LOG_INF("Board: %s", CONFIG_BOARD);
 	LOG_INF("SPI_CS=P2.05, CLK=P2.01, IO0=P2.02, IO1=P2.04, IO2=P2.03, IO3=P2.00");
 

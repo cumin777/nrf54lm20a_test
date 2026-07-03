@@ -24,8 +24,8 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		py25q64_demo_partition: partition@0 {
-			label = "py25q64_demo";
+		py25q128_demo_partition: partition@0 {
+			label = "py25q128_demo";
 			reg = <0x00000000 0x00010000>;
 		};
 	};
