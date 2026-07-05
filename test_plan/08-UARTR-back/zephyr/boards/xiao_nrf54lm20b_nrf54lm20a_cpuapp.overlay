@@ -1,0 +1,19 @@
+/*
+ * 08-UARTR-back on XIAO nRF54LM20B.
+ *
+ * The back-pad UART (uart20, P1.11 TX / P1.10 RX) is configured and enabled by
+ * the board DT (seeed_nrf54lm20b_xiao_α_test): uart20_default/uart20_sleep
+ * pinctrl + &uart20 status "okay". This overlay bumps both UARTs to 1 Mbaud:
+ *   - uart20: back-pad test port (heartbeat + echo)
+ *   - uart21: console (logs), P1.8 TX / P1.9 RX (stamp-hole serial)
+ */
+
+&uart20 {
+	status = "okay";
+	current-speed = <1000000>;
+};
+
+&uart21 {
+	status = "okay";
+	current-speed = <1000000>;
+};
