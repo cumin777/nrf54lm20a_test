@@ -37,7 +37,7 @@ static const uint8_t packet_start[] = {0xAA, 0x55, 'S', 'T', 'A', 'R', 'T'}; // 
 static const uint8_t packet_end[] = {0xAA, 0x55, 'E', 'N', 'D'};             // Packet end marker
 
 static struct gpio_callback button_cb_data;
-static bool first_capture_pending = true;
+static bool first_capture_pending = false;
 
 static int enable_dmic_power(void)
 {
@@ -131,7 +131,7 @@ void uart_writer_thread(void *p1, void *p2, void *p3)
         
         uart_tx(stream_uart_dev, buffer, CHUNK_SIZE_BYTES, SYS_FOREVER_US);
         k_sem_take(&tx_done_sem, K_FOREVER);
-        
+
         k_mem_slab_free(&mem_slab, buffer);
     }
 }
