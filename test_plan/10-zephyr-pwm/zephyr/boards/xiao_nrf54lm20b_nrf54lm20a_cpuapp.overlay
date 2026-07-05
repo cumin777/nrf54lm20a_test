@@ -1,0 +1,29 @@
+/*
+ * 10-zephyr-pwm on XIAO nRF54LM20B.
+ *
+ * Routes pwm20 channel 0 (PWM_OUT0) to XIAO D0 = P1.0, matching the 20A
+ * overlay. The board default would put OUT0 on the red LED (P1.22); this
+ * override sends it to D0 so the firmware's "50% on D0" log is accurate.
+ */
+
+&pwm20 {
+	status = "okay";
+	pinctrl-0 = <&pwm20_d0_default>;
+	pinctrl-1 = <&pwm20_d0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&pinctrl {
+	pwm20_d0_default: pwm20_d0_default {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 1, 0)>;
+		};
+	};
+
+	pwm20_d0_sleep: pwm20_d0_sleep {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 1, 0)>;
+			low-power-enable;
+		};
+	};
+};
