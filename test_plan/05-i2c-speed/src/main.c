@@ -28,8 +28,11 @@ LOG_MODULE_REGISTER(i2c_speed_test, LOG_LEVEL_INF);
 #define BME280_REG_CONFIG   0xF5
 #define BME280_REG_DATA     0xF7  /* 8 bytes: pressure(3) + temp(3) + humidity(2) */
 
-/* BME280 Chip ID */
+/* Chip IDs: BME280 = 0x60, BMP280 = 0x58. Both are accepted so the same
+ * speed-test firmware runs on either module.
+ */
 #define BME280_CHIP_ID      0x60
+#define BMP280_CHIP_ID      0x58
 
 /* Test parameters */
 #define NUM_ITERATIONS      100
@@ -74,12 +77,14 @@ static int bme280_check_device(void)
 		return ret;
 	}
 
-	if (chip_id != BME280_CHIP_ID) {
-		printk("Warning: Unexpected chip ID: 0x%02X (expected 0x60)\n", chip_id);
+	if (chip_id != BME280_CHIP_ID && chip_id != BMP280_CHIP_ID) {
+		printk("Warning: Unexpected chip ID: 0x%02X (expected 0x60 BME280 / 0x58 BMP280)\n",
+		       chip_id);
 		return -1;
 	}
 
-	printk("BME280 found, Chip ID: 0x%02X\n", chip_id);
+	printk("Sensor found, Chip ID: 0x%02X (%s)\n", chip_id,
+	       chip_id == BME280_CHIP_ID ? "BME280" : "BMP280");
 	return 0;
 }
 

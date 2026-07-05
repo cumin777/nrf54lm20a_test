@@ -1,0 +1,21 @@
+/*
+ * GY-BMP280 I2C on XIAO nRF54LM20B.
+ * i2c22 routes to the XIAO I2C pins D4(SDA)=P1.03 / D5(SCL)=P1.07 (board
+ * pinctrl i2c22_default). The bus starts at 400 kHz (fast mode) and is then
+ * swept / reconfigured at runtime by i2c_configure() in main.c to find the
+ * fastest stable speed. The BMP280 is talked to with raw I2C (no sensor
+ * driver), so no child device node is needed. Default address 0x76.
+ */
+
+&i2c22 {
+	status = "okay";
+	pinctrl-0 = <&i2c22_default>;
+	pinctrl-1 = <&i2c22_sleep>;
+	pinctrl-names = "default", "sleep";
+	/* Initial speed; overridden at runtime by i2c_configure() in main.c */
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&spi23 {
+	status = "disabled";
+};
