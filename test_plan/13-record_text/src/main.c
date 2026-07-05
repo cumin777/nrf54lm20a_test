@@ -15,6 +15,7 @@
 
 #define MAX_REC_COUNT           3
 #define NDEF_MSG_BUF_SIZE       128
+#define HEARTBEAT_INTERVAL_MS   2000
 
 #define NFC_FIELD_LED_NODE      DT_ALIAS(led0)
 
@@ -44,6 +45,7 @@ static const uint8_t pl_code[] = {'P', 'L'};
 /* Buffer used to hold an NFC NDEF message. */
 static uint8_t ndef_msg_buf[NDEF_MSG_BUF_SIZE];
 static const struct gpio_dt_spec nfc_field_led = GPIO_DT_SPEC_GET(NFC_FIELD_LED_NODE, gpios);
+static bool nfc_field_active;
 
 static int nfc_field_led_init(void)
 {
@@ -75,10 +77,12 @@ static void nfc_callback(void *context,
 
 	switch (event) {
 	case NFC_T2T_EVENT_FIELD_ON:
+		nfc_field_active = true;
 		printk("NFC field on\n");
 		nfc_field_led_set(true);
 		break;
 	case NFC_T2T_EVENT_FIELD_OFF:
+		nfc_field_active = false;
 		printk("NFC field off\n");
 		nfc_field_led_set(false);
 		break;
@@ -154,6 +158,7 @@ static int welcome_msg_encode(uint8_t *buffer, uint32_t *len)
 int main(void)
 {
 	uint32_t len = sizeof(ndef_msg_buf);
+	uint32_t heartbeat_count = 0U;
 
 	printk("Starting NFC Text Record sample\n");
 
@@ -187,7 +192,13 @@ int main(void)
 	}
 	printk("NFC configuration done\n");
 
-	return 0;
+	while (1) {
+		printk("NFC heartbeat %u: field=%s, uptime=%lld ms\n",
+		       heartbeat_count++,
+		       nfc_field_active ? "on" : "off",
+		       k_uptime_get());
+		k_msleep(HEARTBEAT_INTERVAL_MS);
+	}
 
 fail:
 #if CONFIG_REBOOT

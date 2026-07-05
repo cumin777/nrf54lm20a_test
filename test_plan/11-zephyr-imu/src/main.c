@@ -255,6 +255,14 @@ static void trigger_handler(const struct device *dev,
 	total = atomic_inc(&trigger_count) + 1;
 	(void)fetch_latest_sample(dev);
 
+#if IMU_INT_AVAILABLE
+	LOG_INF("IMU INT fired #%d: data-ready callback on P%d.%02d, level=%d",
+		total, IMU_INT_PORT_NUM, imu_int_gpio.pin,
+		gpio_pin_get_dt(&imu_int_gpio));
+#else
+	LOG_INF("IMU INT fired #%d: data-ready callback", total);
+#endif
+
 	if ((total % 52) == 0) {
 		LOG_INF("INT callback heartbeat: %d sensor data-ready interrupts received", total);
 	}

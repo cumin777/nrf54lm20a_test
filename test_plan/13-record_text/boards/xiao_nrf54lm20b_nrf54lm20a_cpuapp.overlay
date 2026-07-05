@@ -1,0 +1,29 @@
+/*
+ * Copyright (c) 2026
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/*
+ * Route the NFCT peripheral to the XIAO nRF54LM20B antenna pins.
+ * The board DTS already enables NFCT; keep this overlay explicit for
+ * the sample so it is selected when building for xiao_nrf54lm20b.
+ */
+/ {
+	chosen {
+		zephyr,console = &uart21;
+		zephyr,shell-uart = &uart21;
+		zephyr,uart-mcumgr = &uart21;
+		zephyr,bt-mon-uart = &uart21;
+		zephyr,bt-c2h-uart = &uart21;
+	};
+};
+
+&uart21 {
+	status = "okay";
+	current-speed = <115200>;
+};
+
+&nfct {
+	status = "okay";
+};

@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) 2026 Seeed Technology Co., Ltd.
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/ {
+	chosen {
+		ncs,dtm-uart = &uart21;
+	};
+};
+
+&uart21 {
+	status = "okay";
+	current-speed = <19200>;
+};
+
+&radio {
+	/delete-property/ dfe-supported;
+};

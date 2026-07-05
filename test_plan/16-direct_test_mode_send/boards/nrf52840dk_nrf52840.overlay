@@ -1,0 +1,16 @@
+/*
+ * Copyright (c) 2020 Nordic Semiconductor
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/ {
+	chosen {
+		ncs,dtm-uart = &uart0;
+	};
+};
+
+&uart0 {
+	status = "okay";
+	current-speed = <19200>;
+};

@@ -1,5 +1,12 @@
 #include <zephyr/dt-bindings/regulator/npm13xx.h>
 
+/ {
+	chosen {
+		zephyr,console = &uart21;
+		zephyr,shell-uart = &uart21;
+	};
+};
+
 &pmic_i2c {
 	sda-gpios = <&gpio1 18 GPIO_ACTIVE_HIGH>;
 	scl-gpios = <&gpio1 17 GPIO_ACTIVE_HIGH>;
@@ -20,6 +27,10 @@
 			regulator-initial-mode = <NPM13XX_LDSW_MODE_LDO>;
 		};
 	};
+};
+
+&pmic_charger {
+	vbus-limit-microamp = <1500000>;
 };
 
 &lsm6ds3tr_c {
