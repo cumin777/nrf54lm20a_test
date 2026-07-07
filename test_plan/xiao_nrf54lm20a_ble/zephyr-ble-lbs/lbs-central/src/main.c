@@ -94,6 +94,13 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 		return;
 	}
 
+	{
+		char addr_str[BT_ADDR_LE_STR_LEN];
+
+		bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
+		LOG_INF("LBS adv matched from %s (type=0x%02x)", addr_str, type);
+	}
+
 	err = bt_le_scan_stop();
 	if (err) {
 		LOG_WRN("scan stop failed: %d", err);
@@ -125,6 +132,7 @@ static uint8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *at
 			     struct bt_gatt_discover_params *params)
 {
 	if (attr == NULL) {
+		LOG_INF("discover complete (attr=NULL) write_handle=0x%04x", write_handle);
 		memset(params, 0, sizeof(*params));
 		if (discover_conn) {
 			bt_conn_unref(discover_conn);
@@ -138,9 +146,15 @@ static uint8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *at
 
 		svc_start_handle = attr->handle;
 		svc_end_handle = svc->end_handle;
+		LOG_INF("primary svc found: start=0x%04x end=0x%04x",
+			svc_start_handle, svc_end_handle);
 
 		memset(params, 0, sizeof(*params));
-		params->uuid = BT_UUID_LBS_MIN_WRITE;
+		/* Discover ALL characteristics in the service (uuid=NULL), then match
+		 * the write char in code. Filtering by 128-bit UUID at ATT level has
+		 * been unreliable here (returned nothing despite the char existing).
+		 */
+		params->uuid = NULL;
 		params->func = discover_func;
 		params->start_handle = svc_start_handle + 1U;
 		params->end_handle = svc_end_handle;
@@ -155,6 +169,11 @@ static uint8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *at
 
 	if (params->type == BT_GATT_DISCOVER_CHARACTERISTIC) {
 		const struct bt_gatt_chrc *chrc = attr->user_data;
+		char uuid_str[37];
+
+		bt_uuid_to_str(chrc->uuid, uuid_str, sizeof(uuid_str));
+		LOG_INF("chrc: value_handle=0x%04x props=0x%02x uuid=%s",
+			chrc->value_handle, chrc->properties, uuid_str);
 
 		if (bt_uuid_cmp(chrc->uuid, BT_UUID_LBS_MIN_WRITE) == 0) {
 			write_handle = chrc->value_handle;
