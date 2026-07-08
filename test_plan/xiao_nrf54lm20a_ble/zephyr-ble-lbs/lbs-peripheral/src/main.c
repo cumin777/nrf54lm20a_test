@@ -40,6 +40,25 @@ static void led_apply(uint8_t value)
 	(void)gpio_pin_set_dt(&led0, value ? 1 : 0);
 }
 
+/* Blink the LED while no central is connected, as a "not connected" indicator. */
+static volatile bool peer_connected;
+static struct k_work_delayable blink_work;
+
+static void blink_handler(struct k_work *work)
+{
+	ARG_UNUSED(work);
+
+	if (peer_connected) {
+		return;
+	}
+
+	static uint8_t blink_level;
+
+	blink_level = blink_level ? 0U : 1U;
+	led_apply(blink_level);
+	k_work_reschedule(&blink_work, K_MSEC(500));
+}
+
 static ssize_t read_led(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 			void *buf, uint16_t len, uint16_t offset)
 {
@@ -105,6 +124,8 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	}
 
 	LOG_INF("connected");
+	peer_connected = true;
+	led_apply(led_state);
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
@@ -112,6 +133,8 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	ARG_UNUSED(conn);
 
 	LOG_INF("disconnected: 0x%02x %s", reason, bt_hci_err_to_str(reason));
+	peer_connected = false;
+	k_work_reschedule(&blink_work, K_MSEC(500));
 }
 
 BT_CONN_CB_DEFINE(conn_callbacks) = {
@@ -130,6 +153,10 @@ int main(void)
 			led_apply(led_state);
 		}
 	}
+	k_work_init_delayable(&blink_work, blink_handler);
+	peer_connected = false;
+	k_work_reschedule(&blink_work, K_MSEC(500));
+
 	err = bt_enable(NULL);
 	if (err) {
 		LOG_ERR("bt enable failed: %d", err);

@@ -24,6 +24,9 @@ LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 
 static const struct gpio_dt_spec sw0 = GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios, {0});
 
+#define LED0_NODE DT_ALIAS(led0)
+static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET_OR(LED0_NODE, gpios, {0});
+
 static struct bt_conn *default_conn;
 static struct bt_conn *discover_conn;
 static struct bt_gatt_discover_params discover_params;
@@ -41,6 +44,33 @@ static uint8_t remote_led_state;
 static bool gpio_ready(const struct gpio_dt_spec *spec)
 {
 	return spec->port != NULL && device_is_ready(spec->port);
+}
+
+static void led_apply(uint8_t value)
+{
+	if (!gpio_ready(&led0)) {
+		return;
+	}
+
+	(void)gpio_pin_set_dt(&led0, value ? 1 : 0);
+}
+
+/* Blink the LED while not connected (scanning / no link), solid when connected. */
+static struct k_work_delayable blink_work;
+
+static void blink_handler(struct k_work *work)
+{
+	ARG_UNUSED(work);
+
+	if (default_conn != NULL) {
+		return;
+	}
+
+	static uint8_t blink_level;
+
+	blink_level = blink_level ? 0U : 1U;
+	led_apply(blink_level);
+	k_work_reschedule(&blink_work, K_MSEC(500));
 }
 
 static bool ad_has_uuid(struct bt_data *data, void *user_data)
@@ -317,6 +347,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	}
 
 	LOG_INF("connected");
+	led_apply(1);
 	discover_lbs_service(conn);
 }
 
@@ -333,6 +364,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 
 	write_handle = 0U;
 	atomic_set(&write_busy, 0);
+	k_work_reschedule(&blink_work, K_MSEC(500));
 	start_scan();
 }
 
@@ -346,6 +378,12 @@ int main(void)
 	int err;
 
 	remote_led_state = 0U;
+
+	if (gpio_ready(&led0)) {
+		(void)gpio_pin_configure_dt(&led0, GPIO_OUTPUT_INACTIVE);
+	}
+	k_work_init_delayable(&blink_work, blink_handler);
+	k_work_reschedule(&blink_work, K_MSEC(500));
 
 	err = init_button();
 	if (err) {
