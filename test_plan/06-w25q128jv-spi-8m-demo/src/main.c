@@ -103,6 +103,14 @@ static int read_jedec_id(uint8_t jedec_id[3])
 
 static bool jedec_id_supported(const uint8_t jedec_id[3])
 {
+	/* Lenient match: accept any manufacturer of a W25Q128-compatible part.
+	 * Bytes [1..2] = ?? 40 18  -> type 0x40, capacity 0x18 (128 Mbit).
+	 * Covers Winbond (EF), GigaDevice (C8), XTX/Boya (0B) and other clones.
+	 */
+	if (jedec_id[1] == 0x40U && jedec_id[2] == 0x18U) {
+		return true;
+	}
+
 	for (size_t i = 0; i < ARRAY_SIZE(supported_jedec_ids); ++i) {
 		if (memcmp(jedec_id, supported_jedec_ids[i],
 			   sizeof(supported_jedec_ids[i])) == 0) {
@@ -143,7 +151,7 @@ int main(void)
 	LOG_INF("JEDEC ID: %02X %02X %02X", jedec_id[0], jedec_id[1], jedec_id[2]);
 
 	if (!jedec_id_supported(jedec_id)) {
-		LOG_ERR("Unexpected JEDEC ID, supported IDs: EF 40 18 or C8 40 18");
+		LOG_ERR("Unexpected JEDEC ID, want ?? 40 18 (W25Q128-compatible)");
 		return -ENODEV;
 	}
 
