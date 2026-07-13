@@ -1,0 +1,10 @@
+config PARTITION_MANAGER
+	default n
+
+config MCUBOOT_SIGNATURE_USING_KMU
+	default y if SOC_SERIES_NRF54L && !SOC_NRF54LS05B
+
+config MCUBOOT_GENERATE_DEFAULT_KEY_FILE
+	default y if SOC_SERIES_NRF54L && !SOC_NRF54LS05B
+
+source "share/sysbuild/Kconfig"

@@ -17,6 +17,9 @@ one, and do not continue until its expected result is observed.
    XIAO Button 0. Expected behavior: no button -> signed LED app blinks;
    hold Button 0 during reset -> USB CDC ACM firmware loader enumerates and
    the LED app does not run.
+6. `06-usb-dfu-transfer-update`: build a second signed application image for
+   USB MCUmgr upload. Expected behavior after DFU: the app version is
+   `0.0.1+0` and the LED behavior changes to `led1` toggling every 500 ms.
 
 Later stages should add full MCUmgr DFU transfer and optional buttonless entry
 only after the boot-time USB loader path is confirmed.
