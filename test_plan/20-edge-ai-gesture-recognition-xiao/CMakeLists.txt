@@ -37,7 +37,7 @@ target_include_directories(app PRIVATE
 )
 
 target_sources(app PRIVATE
-  ${OFFICIAL_SRC}/main.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
   ${OFFICIAL_SRC}/inference_postprocessing.c
   ${OFFICIAL_SRC}/hw_modules/button/button.c
   ${OFFICIAL_SRC}/hw_modules/led/led.c
