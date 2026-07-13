@@ -8,6 +8,8 @@
 
 ## 测试环境
 
+研发机构建环境如下，仅用于说明固件来源；测试侧执行烧录和 USB DFU 不需要安装完整 nRF Connect SDK 或工具链。
+
 ```powershell
 $tc = 'C:\ncs\toolchains\936afb6332'
 $sdk = 'D:\workspace\ncs\v3.3.0'
@@ -15,7 +17,65 @@ $boardRoot = 'D:\workspace\xiao_nrf54lm20b\platform-seeedboards\zephyr'
 $board = 'xiao_nrf54lm20b/nrf54lm20b/cpuapp'
 ```
 
-设备烧录和 KMU 密钥写入使用工具链自带的 nrfutil home：
+## 测试侧最小工具安装
+
+测试侧只需要以下内容：
+
+1. standalone `nrfutil.exe`。
+2. `nrfutil` commands：`device` 和 `mcu-manager`。
+3. SEGGER J-Link 驱动，用于 `nrfutil device program` 和 `x-provision-keys` 通过调试器访问芯片。
+4. 测试固件文件：`merged.hex`、`keyfile.json`、`dfu_application.zip`。
+
+不需要安装完整的 NCS SDK，也不需要安装 `C:\ncs\toolchains\936afb6332`。
+
+在线安装方式：
+
+```powershell
+$nrfutil = 'C:\Tools\nrfutil\nrfutil.exe'
+$env:NRFUTIL_HOME = 'C:\Tools\nrfutil\home'
+
+& $nrfutil install device=2.17.5 mcu-manager=0.10.2
+
+& $nrfutil device --version
+& $nrfutil mcu-manager --version
+```
+
+版本选择：
+
+- `device=2.17.5`：本项目验证过 nRF54LM20B，可避免旧版本不识别 part number `0x00000033`。
+- `mcu-manager=0.10.2`：本项目已验证 USB CDC ACM + MCUmgr DFU 正常。
+
+离线安装方式：
+
+在有网络的电脑上准备离线包：
+
+```powershell
+$nrfutil = 'C:\Tools\nrfutil\nrfutil.exe'
+& $nrfutil prepare-offline D:\nrfutil-offline
+```
+
+将 `D:\nrfutil-offline` 和 `nrfutil.exe` 拷贝到测试电脑，然后执行：
+
+```powershell
+$nrfutil = 'D:\nrfutil\nrfutil.exe'
+$env:NRFUTIL_HOME = 'D:\nrfutil\home'
+
+& $nrfutil install --from-offline D:\nrfutil-offline device=2.17.5 mcu-manager=0.10.2
+
+& $nrfutil device --version
+& $nrfutil mcu-manager --version
+```
+
+参考官方文档：
+
+- nRF Util 下载页：`https://www.nordicsemi.com/Products/Development-tools/nRF-Util`
+- nRF Util device command：`https://docs.nordicsemi.com/r/bundle/nrfutil/page/nrfutil-device/guides/programming.html`
+- nRF Util offline bundle：`https://docs.nordicsemi.com/r/bundle/nrfutil/page/guides/installing.html/preparing-nrf-util-offline-bundle`
+- nRF Util commands offline install：`https://docs.nordicsemi.com/r/bundle/nrfutil/page/guides/installing.html/installing-nrf-util-commands-when-offline`
+
+## 本机已验证工具路径
+
+本机设备烧录和 KMU 密钥写入使用工具链自带的 nrfutil home：
 
 ```powershell
 $env:NRFUTIL_HOME = "$tc\nrfutil\home"
@@ -77,10 +137,10 @@ COM22    USB 串行设备 (COM22)    USB\VID_2FE3&PID_0004&MI_00\...
 使用 `nrfutil device program`：
 
 ```powershell
-$tc = 'C:\ncs\toolchains\936afb6332'
-$env:NRFUTIL_HOME = "$tc\nrfutil\home"
+$nrfutil = 'C:\Tools\nrfutil\nrfutil.exe'
+$env:NRFUTIL_HOME = 'C:\Tools\nrfutil\home'
 
-& "$tc\nrfutil\bin\nrfutil.exe" device program `
+& $nrfutil device program `
   --firmware D:\workspace\build_usb_bringup_07_usb_loader_board_cdc_b\merged.hex `
   --serial-number 69660778 `
   --family nrf54l `
@@ -110,15 +170,15 @@ g
 命令如下：
 
 ```powershell
-$tc = 'C:\ncs\toolchains\936afb6332'
-$env:NRFUTIL_HOME = "$tc\nrfutil\home"
+$nrfutil = 'C:\Tools\nrfutil\nrfutil.exe'
+$env:NRFUTIL_HOME = 'C:\Tools\nrfutil\home'
 
-& "$tc\nrfutil\bin\nrfutil.exe" device x-provision-keys `
+& $nrfutil device x-provision-keys `
   --key-file D:\workspace\build_usb_bringup_07_usb_loader_board_cdc_b\keyfile.json `
   --serial-number 69660778 `
   --family nrf54l
 
-& "$tc\nrfutil\bin\nrfutil.exe" device reset `
+& $nrfutil device reset `
   --serial-number 69660778 `
   --family nrf54l
 ```
@@ -151,10 +211,10 @@ VID_2FE3&PID_0004
 将 `COM22` 替换为实际枚举出来的 DFU COM 口。
 
 ```powershell
-$tc = 'C:\ncs\toolchains\936afb6332'
-$env:NRFUTIL_HOME = 'D:\workspace\nrfutil_mcumgr_home'
+$nrfutil = 'C:\Tools\nrfutil\nrfutil.exe'
+$env:NRFUTIL_HOME = 'C:\Tools\nrfutil\home'
 
-& "$tc\nrfutil\bin\nrfutil.exe" mcu-manager serial image-list `
+& $nrfutil mcu-manager serial image-list `
   --serial-port COM22 `
   --timeout 60
 ```
@@ -164,10 +224,10 @@ $env:NRFUTIL_HOME = 'D:\workspace\nrfutil_mcumgr_home'
 ## 通过 USB DFU 上传 06 更新包
 
 ```powershell
-$tc = 'C:\ncs\toolchains\936afb6332'
-$env:NRFUTIL_HOME = 'D:\workspace\nrfutil_mcumgr_home'
+$nrfutil = 'C:\Tools\nrfutil\nrfutil.exe'
+$env:NRFUTIL_HOME = 'C:\Tools\nrfutil\home'
 
-& "$tc\nrfutil\bin\nrfutil.exe" mcu-manager serial image-upload `
+& $nrfutil mcu-manager serial image-upload `
   --serial-port COM22 `
   --timeout 60 `
   --firmware D:\workspace\build_usb_bringup_06_usb_dfu_transfer_update_b\dfu_application.zip
@@ -176,7 +236,7 @@ $env:NRFUTIL_HOME = 'D:\workspace\nrfutil_mcumgr_home'
 上传完成后复位：
 
 ```powershell
-& "$tc\nrfutil\bin\nrfutil.exe" mcu-manager serial reset `
+& $nrfutil mcu-manager serial reset `
   --serial-port COM22 `
   --timeout 60
 ```
