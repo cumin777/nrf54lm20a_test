@@ -20,6 +20,9 @@ one, and do not continue until its expected result is observed.
 6. `06-usb-dfu-transfer-update`: build a second signed application image for
    USB MCUmgr upload. Expected behavior after DFU: the app version is
    `0.0.1+0` and the LED behavior changes to `led1` toggling every 500 ms.
+7. `07-usb-loader-board-cdc`: bind the firmware loader MCUmgr transport to the
+   XIAO board's default CDC ACM node. Expected behavior: the DFU COM port
+   responds to `nrfutil mcu-manager serial image-list`.
 
 Later stages should add full MCUmgr DFU transfer and optional buttonless entry
 only after the boot-time USB loader path is confirmed.
