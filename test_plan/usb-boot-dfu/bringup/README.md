@@ -9,8 +9,14 @@ one, and do not continue until its expected result is observed.
 2. `02-mcuboot-signed-led`: add MCUboot and the signed application only. This
    proves image signing, partition addresses, and the MCUboot-to-application
    jump.
-3. Add the firmware-loader GPIO entrance without USB transfer.
-4. Add `fw_loader/usb_mcumgr` and verify USB enumeration.
+3. `03-mcuboot-official-validate-led`: align with the official nRF54LM20B
+   MCUboot validation path and verify the signed LED application still boots.
+4. `04-usb-loader-build-only`: add `fw_loader/usb_mcumgr` and verify the full
+   sysbuild image set can be built.
+5. `05-usb-loader-button-entry`: make the MCUboot GPIO entrance explicit for
+   XIAO Button 0. Expected behavior: no button -> signed LED app blinks;
+   hold Button 0 during reset -> USB CDC ACM firmware loader enumerates and
+   the LED app does not run.
 
-The next stage is intentionally not created until the result of stage 1 is
-known. It avoids mixing a hardware bring-up failure with a bootloader issue.
+Later stages should add full MCUmgr DFU transfer and optional buttonless entry
+only after the boot-time USB loader path is confirmed.
