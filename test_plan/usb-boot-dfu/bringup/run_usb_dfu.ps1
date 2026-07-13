@@ -1,0 +1,107 @@
+param(
+    [string]$Port,
+    [string]$Nrfutil = ''
+)
+
+$ErrorActionPreference = 'Stop'
+
+function Resolve-NrfutilPath {
+    param([string]$RequestedPath)
+
+    $candidates = @()
+
+    if (-not [string]::IsNullOrWhiteSpace($RequestedPath)) {
+        $candidates += $RequestedPath
+    }
+
+    $candidates += @(
+        (Join-Path $PSScriptRoot 'nrfutil.exe'),
+        'C:\nrfutil\nrfutil.exe'
+    )
+
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+
+    $fromPath = Get-Command nrfutil.exe -ErrorAction SilentlyContinue
+    if ($fromPath) {
+        return $fromPath.Source
+    }
+
+    throw 'nrfutil.exe not found. Put it in C:\nrfutil\nrfutil.exe, next to this script, or add it to PATH.'
+}
+
+function Invoke-Nrfutil {
+    param(
+        [string]$Exe,
+        [string[]]$Arguments
+    )
+
+    Write-Host ''
+    Write-Host "> $Exe $($Arguments -join ' ')"
+    & $Exe @Arguments
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "nrfutil command failed with exit code $LASTEXITCODE."
+    }
+}
+
+$nrfutilExe = Resolve-NrfutilPath -RequestedPath $Nrfutil
+
+if ([string]::IsNullOrWhiteSpace($env:NRFUTIL_HOME)) {
+    if (Test-Path -LiteralPath 'C:\nrfutil\home') {
+        $env:NRFUTIL_HOME = 'C:\nrfutil\home'
+    } else {
+        $env:NRFUTIL_HOME = Join-Path (Split-Path -Parent $nrfutilExe) 'home'
+    }
+}
+
+$dfuPackage = Join-Path $PSScriptRoot 'dfu_application.zip'
+if (-not (Test-Path -LiteralPath $dfuPackage)) {
+    throw "DFU package not found: $dfuPackage"
+}
+
+if ([string]::IsNullOrWhiteSpace($Port)) {
+    $Port = Read-Host 'Input DFU COM port, for example COM22'
+}
+
+$Port = $Port.Trim().ToUpperInvariant()
+if ($Port -notmatch '^COM\d+$') {
+    throw "Invalid COM port: $Port. Expected format: COM22"
+}
+
+Write-Host ''
+Write-Host 'XIAO nRF54LM20B USB DFU'
+Write-Host "nrfutil: $nrfutilExe"
+Write-Host "NRFUTIL_HOME: $env:NRFUTIL_HOME"
+Write-Host "Port: $Port"
+Write-Host "DFU package: $dfuPackage"
+
+Invoke-Nrfutil -Exe $nrfutilExe -Arguments @(
+    'mcu-manager', 'serial', 'image-list',
+    '--serial-port', $Port,
+    '--timeout', '60'
+)
+
+Invoke-Nrfutil -Exe $nrfutilExe -Arguments @(
+    'mcu-manager', 'serial', 'image-upload',
+    '--serial-port', $Port,
+    '--timeout', '60',
+    '--firmware', $dfuPackage
+)
+
+try {
+    Invoke-Nrfutil -Exe $nrfutilExe -Arguments @(
+        'mcu-manager', 'serial', 'reset',
+        '--serial-port', $Port,
+        '--timeout', '60'
+    )
+} catch {
+    Write-Warning "Upload finished, but reset command did not complete: $($_.Exception.Message)"
+    Write-Warning 'If the board did not reset automatically, reset it manually.'
+}
+
+Write-Host ''
+Write-Host 'DFU finished. Check that the red LED blinks every 500 ms after reset.'

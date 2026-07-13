@@ -15,7 +15,7 @@
 2. `nrfutil` command：`device=2.17.5`。
 3. `nrfutil` command：`mcu-manager=0.10.2`。
 4. SEGGER J-Link 驱动，用于通过调试器烧录固件和写入 KMU key。
-5. 本文档列出的测试固件文件。
+5. 本文档列出的测试固件文件和 DFU 脚本。
 
 
 ## 下载 nRF Util
@@ -50,7 +50,7 @@ $env:NRFUTIL_HOME = 'C:\nrfutil\home'
 
 ## 测试固件文件
 
-将研发提供的 3 个文件放到同一个测试目录：
+将研发提供的文件放到同一个测试目录：
 
 ```text
 D:\xiao_nrf54lm20b_usb_dfu_test
@@ -62,6 +62,8 @@ D:\xiao_nrf54lm20b_usb_dfu_test
 D:\xiao_nrf54lm20b_usb_dfu_test\06-USB-DFU.hex
 D:\xiao_nrf54lm20b_usb_dfu_test\dfu_application.zip
 D:\xiao_nrf54lm20b_usb_dfu_test\keyfile.json
+D:\xiao_nrf54lm20b_usb_dfu_test\run_usb_dfu.ps1
+D:\xiao_nrf54lm20b_usb_dfu_test\run_usb_dfu.cmd
 ```
 
 ## PowerShell 公共变量
@@ -165,7 +167,43 @@ Get-CimInstance Win32_SerialPort |
 $dfuCom = 'COM22'
 ```
 
-## 检查 MCUmgr 连接
+## 一键执行 USB DFU
+
+推荐测试人员使用脚本执行 DFU。脚本会自动使用同目录下的 `dfu_application.zip`，并依次执行：
+
+1. `image-list` 检查连接。
+2. `image-upload` 上传更新包。
+3. `reset` 复位设备。
+
+操作步骤：
+
+1. 确认板子已经进入 USB DFU 模式。
+2. 确认 Windows 已枚举出 DFU COM 口。
+3. 执行：
+
+```powershell
+cd D:\xiao_nrf54lm20b_usb_dfu_test
+.\run_usb_dfu.cmd
+```
+
+4. 按提示输入 COM 口，例如：
+
+```text
+COM22
+```
+
+也可以直接在 PowerShell 中传入端口号：
+
+```powershell
+cd D:\xiao_nrf54lm20b_usb_dfu_test
+.\run_usb_dfu.ps1 -Port COM22
+```
+
+脚本执行完成后，确认应用行为已经变成 06 固件：
+
+- 红色 LED，也就是 `led1`，每 500 ms 翻转。
+
+## 手动检查 MCUmgr 连接
 
 ```powershell
 & $nrfutil mcu-manager serial image-list `
@@ -175,7 +213,7 @@ $dfuCom = 'COM22'
 
 该命令必须能够正常返回 image list，然后再执行上传。
 
-## 通过 USB DFU 上传 06 更新包
+## 手动通过 USB DFU 上传 06 更新包
 
 ```powershell
 & $nrfutil mcu-manager serial image-upload `
