@@ -1,12 +1,12 @@
-# XIAO nRF54LM20B USB DFU test notes
+# XIAO nRF54LM20B USB DFU 测试记录
 
-This document records the verified USB DFU flow:
+本文档记录当前已经验证通过的 USB DFU 流程：
 
-- Baseline firmware: `07-usb-loader-board-cdc`
-- Update firmware: `06-usb-dfu-transfer-update`
-- Bootloader path: MCUboot firmware loader mode, USB CDC ACM + MCUmgr
+- 基线固件：`07-usb-loader-board-cdc`
+- 更新固件：`06-usb-dfu-transfer-update`
+- 启动链路：MCUboot firmware loader mode，USB CDC ACM + MCUmgr
 
-## Environment
+## 测试环境
 
 ```powershell
 $tc = 'C:\ncs\toolchains\936afb6332'
@@ -15,66 +15,66 @@ $boardRoot = 'D:\workspace\xiao_nrf54lm20b\platform-seeedboards\zephyr'
 $board = 'xiao_nrf54lm20b/nrf54lm20b/cpuapp'
 ```
 
-Device programming and KMU provisioning use the toolchain nrfutil home:
+设备烧录和 KMU 密钥写入使用工具链自带的 nrfutil home：
 
 ```powershell
 $env:NRFUTIL_HOME = "$tc\nrfutil\home"
 ```
 
-USB MCUmgr commands use the separate nrfutil home where `mcu-manager` is installed:
+USB MCUmgr 命令使用单独的 nrfutil home，其中已安装 `mcu-manager`：
 
 ```powershell
 $env:NRFUTIL_HOME = 'D:\workspace\nrfutil_mcumgr_home'
 ```
 
-## Firmware paths
+## 固件路径
 
-Baseline firmware, programmed by J-Link or `nrfutil device program`:
+基线固件，用于 J-Link 或 `nrfutil device program` 直接烧录：
 
 ```text
 D:\workspace\build_usb_bringup_07_usb_loader_board_cdc_b\merged.hex
 ```
 
-Baseline KMU key file:
+基线固件对应的 KMU key 文件：
 
 ```text
 D:\workspace\build_usb_bringup_07_usb_loader_board_cdc_b\keyfile.json
 ```
 
-Update package uploaded through USB DFU:
+通过 USB DFU 上传的更新包：
 
 ```text
 D:\workspace\build_usb_bringup_06_usb_dfu_transfer_update_b\dfu_application.zip
 ```
 
-Update signed binary, if a raw signed image is needed:
+如果需要单独的 signed bin，可使用：
 
 ```text
 D:\workspace\build_usb_bringup_06_usb_dfu_transfer_update_b\06-usb-dfu-transfer-update\zephyr\zephyr.signed.bin
 ```
 
-## Expected behavior
+## 预期现象
 
-`07-usb-loader-board-cdc`:
+`07-usb-loader-board-cdc`：
 
-- Normal reset: application runs, `led2` toggles every 250 ms.
-- Hold Button 0 during reset: MCUboot enters USB firmware loader mode.
-- In firmware loader mode, the application LED does not blink.
-- Windows enumerates a Zephyr CDC ACM port, for example:
+- 正常复位：进入应用，`led2` 每 250 ms 翻转。
+- 按住 Button 0 复位：MCUboot 进入 USB firmware loader mode。
+- 进入 firmware loader mode 后，应用层 LED 不闪烁。
+- Windows 枚举出 Zephyr CDC ACM 串口，例如：
 
 ```text
 COM22    USB 串行设备 (COM22)    USB\VID_2FE3&PID_0004&MI_00\...
 ```
 
-`06-usb-dfu-transfer-update` after DFU:
+`06-usb-dfu-transfer-update` 通过 DFU 更新成功后：
 
-- Application image version: `0.0.1+0`.
-- Application runs with `led1` toggling every 500 ms.
-- On the current XIAO board DTS, `led1` is the red LED.
+- 应用镜像版本：`0.0.1+0`。
+- 应用运行后 `led1` 每 500 ms 翻转。
+- 当前 XIAO 板级 DTS 中，`led1` 对应红色 LED。
 
-## Program baseline firmware
+## 烧录基线固件
 
-Use `nrfutil device program`:
+使用 `nrfutil device program`：
 
 ```powershell
 $tc = 'C:\ncs\toolchains\936afb6332'
@@ -87,7 +87,7 @@ $env:NRFUTIL_HOME = "$tc\nrfutil\home"
   --options chip_erase_mode=ERASE_ALL,verify=VERIFY_READ
 ```
 
-Or use J-Link Commander:
+也可以使用 J-Link Commander：
 
 ```text
 loadfile D:\workspace\build_usb_bringup_07_usb_loader_board_cdc_b\merged.hex
@@ -95,12 +95,19 @@ r
 g
 ```
 
-## Provision KMU key
+## 写入 KMU 密钥
 
-The signing validation key is not part of `merged.hex`.
-It is provisioned into the chip KMU key slot with `keyfile.json`.
+签名校验用的 key 不在 `merged.hex` 中。
+它通过 `keyfile.json` 写入芯片的 KMU key slot。
 
-Run this after a full erase/recover, after changing keys, or when bringing up a fresh device:
+以下场景需要执行本步骤：
+
+- 新板子首次烧录。
+- 执行过 full erase 或 recover。
+- 修改过签名 key。
+- 不确定 KMU key slot 当前状态。
+
+命令如下：
 
 ```powershell
 $tc = 'C:\ncs\toolchains\936afb6332'
@@ -116,32 +123,32 @@ $env:NRFUTIL_HOME = "$tc\nrfutil\home"
   --family nrf54l
 ```
 
-If the same KMU key is already provisioned and the chip was not recovered or erased in a way that clears KMU, this step normally does not need to be repeated.
+如果同一个 KMU key 已经写入，并且芯片没有经过会清除 KMU 的 recover 或 erase 操作，通常不需要重复写入。
 
-## Enter USB DFU mode
+## 进入 USB DFU 模式
 
-1. Hold XIAO Button 0.
-2. Reset the board.
-3. Release Button 0 after reset.
-4. Confirm the app LED is not blinking.
-5. Confirm the Zephyr CDC ACM COM port.
+1. 按住 XIAO Button 0。
+2. 复位板子。
+3. 复位后松开 Button 0。
+4. 确认应用层 LED 不闪烁。
+5. 确认 Windows 枚举出 Zephyr CDC ACM COM 口。
 
-Example COM port check:
+查看 COM 口示例：
 
 ```powershell
 Get-CimInstance Win32_SerialPort |
   Select-Object DeviceID, Name, PNPDeviceID
 ```
 
-Expected VID/PID:
+预期 VID/PID：
 
 ```text
 VID_2FE3&PID_0004
 ```
 
-## Check MCUmgr connection
+## 检查 MCUmgr 连接
 
-Replace `COM22` with the actual DFU COM port.
+将 `COM22` 替换为实际枚举出来的 DFU COM 口。
 
 ```powershell
 $tc = 'C:\ncs\toolchains\936afb6332'
@@ -152,9 +159,9 @@ $env:NRFUTIL_HOME = 'D:\workspace\nrfutil_mcumgr_home'
   --timeout 60
 ```
 
-This command must return the image list before attempting upload.
+该命令必须能够正常返回 image list，然后再执行上传。
 
-## Upload 06 update through USB DFU
+## 通过 USB DFU 上传 06 更新包
 
 ```powershell
 $tc = 'C:\ncs\toolchains\936afb6332'
@@ -166,7 +173,7 @@ $env:NRFUTIL_HOME = 'D:\workspace\nrfutil_mcumgr_home'
   --firmware D:\workspace\build_usb_bringup_06_usb_dfu_transfer_update_b\dfu_application.zip
 ```
 
-Reset after upload:
+上传完成后复位：
 
 ```powershell
 & "$tc\nrfutil\bin\nrfutil.exe" mcu-manager serial reset `
@@ -174,17 +181,17 @@ Reset after upload:
   --timeout 60
 ```
 
-After reset, verify that the application behavior changed to the 06 image:
+复位后确认应用行为已经变成 06 固件：
 
-- Red LED (`led1`) toggles every 500 ms.
+- 红色 LED，也就是 `led1`，每 500 ms 翻转。
 
-## Known-good result
+## 已验证结果
 
-The verified result is:
+当前已验证通过的结果如下：
 
-1. `07-usb-loader-board-cdc` boots normally and blinks the original app LED.
-2. Holding Button 0 during reset enters USB firmware loader mode.
-3. Windows enumerates `USB\VID_2FE3&PID_0004`.
-4. `nrfutil mcu-manager serial image-list` responds on the DFU COM port.
-5. Uploading `06-usb-dfu-transfer-update` succeeds.
-6. After reset, the new app runs with red LED blinking every 500 ms.
+1. `07-usb-loader-board-cdc` 正常启动时，应用 LED 按原始逻辑闪烁。
+2. 按住 Button 0 复位后，MCUboot 进入 USB firmware loader mode。
+3. Windows 枚举出 `USB\VID_2FE3&PID_0004`。
+4. `nrfutil mcu-manager serial image-list` 可以在 DFU COM 口正常返回。
+5. 上传 `06-usb-dfu-transfer-update` 成功。
+6. 复位后，新应用运行，红色 LED 每 500 ms 闪烁。
