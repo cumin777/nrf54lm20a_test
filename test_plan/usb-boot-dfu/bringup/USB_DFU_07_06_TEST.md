@@ -17,12 +17,6 @@
 4. SEGGER J-Link 驱动，用于通过调试器烧录固件和写入 KMU key。
 5. 本文档列出的测试固件文件。
 
-不需要安装：
-
-- nRF Connect SDK。
-- VS Code nRF Connect 扩展。
-- 完整 Nordic 工具链。
-- west、CMake、Zephyr build 环境。
 
 ## 下载 nRF Util
 
@@ -37,7 +31,7 @@ https://www.nordicsemi.com/Products/Development-tools/nRF-Util
 ```text
 C:\nrfutil\nrfutil.exe
 C:\nrfutil\home
-D:\xiao_nrf54lm20b_usb_dfu_test\firmware
+D:\xiao_nrf54lm20b_usb_dfu_test
 ```
 
 ## 安装 nRF Util Commands
@@ -54,59 +48,20 @@ $env:NRFUTIL_HOME = 'C:\nrfutil\home'
 & $nrfutil mcu-manager --version
 ```
 
-版本要求：
-
-- `device=2.17.5`：本项目验证过 nRF54LM20B，可避免旧版本不识别 part number `0x00000033`。
-- `mcu-manager=0.10.2`：本项目已验证 USB CDC ACM + MCUmgr DFU 正常。
-
-## 离线安装方式
-
-如果测试电脑不能联网，可在有网络的电脑上准备离线包：
-
-```powershell
-$nrfutil = 'C:\nrfutil\nrfutil.exe'
-& $nrfutil prepare-offline D:\nrfutil-offline
-```
-
-将以下内容拷贝到测试电脑：
-
-```text
-C:\nrfutil\nrfutil.exe
-D:\nrfutil-offline
-```
-
-然后在测试电脑执行：
-
-```powershell
-$nrfutil = 'C:\nrfutil\nrfutil.exe'
-$env:NRFUTIL_HOME = 'C:\nrfutil\home'
-
-& $nrfutil install --from-offline D:\nrfutil-offline device=2.17.5 mcu-manager=0.10.2
-
-& $nrfutil device --version
-& $nrfutil mcu-manager --version
-```
-
 ## 测试固件文件
 
-请将研发提供的固件文件放到以下目录：
+将研发提供的 3 个文件放到同一个测试目录：
 
 ```text
-D:\xiao_nrf54lm20b_usb_dfu_test\firmware
+D:\xiao_nrf54lm20b_usb_dfu_test
 ```
 
 文件清单：
 
 ```text
-D:\xiao_nrf54lm20b_usb_dfu_test\firmware\07-usb-loader-board-cdc\merged.hex
-D:\xiao_nrf54lm20b_usb_dfu_test\firmware\07-usb-loader-board-cdc\keyfile.json
-D:\xiao_nrf54lm20b_usb_dfu_test\firmware\06-usb-dfu-transfer-update\dfu_application.zip
-```
-
-如果需要单独检查 signed bin，可额外交付：
-
-```text
-D:\xiao_nrf54lm20b_usb_dfu_test\firmware\06-usb-dfu-transfer-update\zephyr.signed.bin
+D:\xiao_nrf54lm20b_usb_dfu_test\06-USB-DFU.hex
+D:\xiao_nrf54lm20b_usb_dfu_test\dfu_application.zip
+D:\xiao_nrf54lm20b_usb_dfu_test\keyfile.json
 ```
 
 ## PowerShell 公共变量
@@ -125,10 +80,10 @@ $env:NRFUTIL_HOME = 'C:\nrfutil\home'
 $serialNumber = '69660778'
 $dfuCom = 'COM22'
 
-$firmwareDir = 'D:\xiao_nrf54lm20b_usb_dfu_test\firmware'
-$baselineHex = "$firmwareDir\07-usb-loader-board-cdc\merged.hex"
-$keyFile = "$firmwareDir\07-usb-loader-board-cdc\keyfile.json"
-$dfuZip = "$firmwareDir\06-usb-dfu-transfer-update\dfu_application.zip"
+$firmwareDir = 'D:\xiao_nrf54lm20b_usb_dfu_test'
+$baselineHex = "$firmwareDir\06-USB-DFU.hex"
+$keyFile = "$firmwareDir\keyfile.json"
+$dfuZip = "$firmwareDir\dfu_application.zip"
 ```
 
 ## 预期现象
@@ -162,9 +117,10 @@ COM22    USB 串行设备 (COM22)    USB\VID_2FE3&PID_0004&MI_00\...
   --options chip_erase_mode=ERASE_ALL,verify=VERIFY_READ
 ```
 
+
 ## 写入 KMU 密钥
 
-签名校验用的 key 不在 `merged.hex` 中。
+签名校验用的 key 不在 `06-USB-DFU.hex` 中。
 它通过 `keyfile.json` 写入芯片的 KMU key slot。
 
 以下场景需要执行本步骤：
@@ -172,7 +128,6 @@ COM22    USB 串行设备 (COM22)    USB\VID_2FE3&PID_0004&MI_00\...
 - 新板子首次烧录。
 - 执行过 full erase 或 recover。
 - 修改过签名 key。
-- 不确定 KMU key slot 当前状态。
 
 命令如下：
 
@@ -204,12 +159,6 @@ Get-CimInstance Win32_SerialPort |
   Select-Object DeviceID, Name, PNPDeviceID
 ```
 
-预期 VID/PID：
-
-```text
-VID_2FE3&PID_0004
-```
-
 将实际 COM 口写入变量：
 
 ```powershell
@@ -235,28 +184,10 @@ $dfuCom = 'COM22'
   --firmware $dfuZip
 ```
 
-上传完成后复位：
-
-```powershell
-& $nrfutil mcu-manager serial reset `
-  --serial-port $dfuCom `
-  --timeout 60
-```
-
 复位后确认应用行为已经变成 06 固件：
 
 - 红色 LED，也就是 `led1`，每 500 ms 翻转。
 
-## 已验证结果
-
-当前已验证通过的结果如下：
-
-1. `07-usb-loader-board-cdc` 正常启动时，应用 LED 按原始逻辑闪烁。
-2. 按住 Button 0 复位后，MCUboot 进入 USB firmware loader mode。
-3. Windows 枚举出 `USB\VID_2FE3&PID_0004`。
-4. `nrfutil mcu-manager serial image-list` 可以在 DFU COM 口正常返回。
-5. 上传 `06-usb-dfu-transfer-update` 成功。
-6. 复位后，新应用运行，红色 LED 每 500 ms 闪烁。
 
 ## 官方参考
 
