@@ -64,9 +64,15 @@ function Invoke-Nrfutil {
 
 $nrfutilExe = Resolve-NrfutilPath -RequestedPath $Nrfutil
 
-if ([string]::IsNullOrWhiteSpace($env:NRFUTIL_HOME)) {
-    if (Test-Path -LiteralPath 'C:\nrfutil\home') {
-        $env:NRFUTIL_HOME = 'C:\nrfutil\home'
+$nrfutilHome = 'C:\nrfutil\home'
+$windowsDir = [System.IO.Path]::GetFullPath($env:WINDIR).TrimEnd('\')
+
+if (Test-Path -LiteralPath $nrfutilHome) {
+    $env:NRFUTIL_HOME = $nrfutilHome
+} elseif (-not [string]::IsNullOrWhiteSpace($env:NRFUTIL_HOME)) {
+    $resolvedHome = [System.IO.Path]::GetFullPath($env:NRFUTIL_HOME)
+    if ($resolvedHome.StartsWith($windowsDir, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Remove-Item Env:NRFUTIL_HOME -ErrorAction SilentlyContinue
     }
 }
 

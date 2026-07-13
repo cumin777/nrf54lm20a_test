@@ -1,11 +1,6 @@
-# XIAO nRF54LM20B USB DFU 测试记录
+## XIAO nRF54LM20B USB DFU 测试记录
 
-本文档记录当前已经验证通过的 USB DFU 测试流程：
-
-- 基线固件：`07-usb-loader-board-cdc`
-- 更新固件：`06-usb-dfu-transfer-update`
-- 启动链路：MCUboot firmware loader mode，USB CDC ACM + MCUmgr
-- 测试工具：standalone nRF Util，不依赖完整 nRF Connect SDK 或本机 NCS 工具链
+本文档面向测试侧执行 USB DFU。测试人员安装好 nRF Util Commands 后，DFU 阶段只需要运行脚本并输入 COM 口。
 
 ## 测试侧工具要求
 
@@ -66,31 +61,32 @@ D:\xiao_nrf54lm20b_usb_dfu_test\run_usb_dfu.ps1
 D:\xiao_nrf54lm20b_usb_dfu_test\run_usb_dfu.cmd
 ```
 
-## PowerShell 公共变量
+## 脚本依赖说明
 
-后续命令统一使用以下变量。
+`run_usb_dfu.cmd` 和 `run_usb_dfu.ps1` 不依赖预先设置 PowerShell 变量。
 
-需要按实际测试环境修改：
+测试人员只需要确认：
 
-- `$serialNumber`：J-Link 序列号。
-- `$dfuCom`：进入 USB DFU 模式后枚举出来的 COM 口。
+1. nRF Util Commands 已安装完成。
+2. `dfu_application.zip` 和脚本在同一个目录。
+3. 板子已经进入 USB DFU 模式。
+4. Windows 已枚举出 DFU COM 口，例如 `COM22`。
 
-```powershell
-$nrfutil = 'C:\nrfutil\nrfutil.exe'
-$env:NRFUTIL_HOME = 'C:\nrfutil\home'
+脚本会自动查找 `nrfutil.exe`：
 
-$serialNumber = '69660778'
-$dfuCom = 'COM22'
+1. 优先使用脚本同目录下的 `nrfutil.exe`。
+2. 其次使用 `C:\nrfutil\nrfutil.exe`。
+3. 最后从系统 `PATH` 中查找。
 
-$firmwareDir = 'D:\xiao_nrf54lm20b_usb_dfu_test'
-$baselineHex = "$firmwareDir\06-USB-DFU.hex"
-$keyFile = "$firmwareDir\keyfile.json"
-$dfuZip = "$firmwareDir\dfu_application.zip"
-```
+脚本会自动处理 `NRFUTIL_HOME`：
+
+1. 如果存在 `C:\nrfutil\home`，脚本会使用该目录。
+2. 如果不存在，脚本让 nRF Util 使用自己的默认 home。
+3. 测试人员不需要手动设置 `$env:NRFUTIL_HOME`。
 
 ## 预期现象
 
-`07-usb-loader-board-cdc`：
+`\06-USB-DFU.hex`：
 
 - 正常复位：进入应用，`led2` 每 250 ms 翻转。
 - 按住 Button 0 复位：MCUboot 进入 USB firmware loader mode。
@@ -101,50 +97,14 @@ $dfuZip = "$firmwareDir\dfu_application.zip"
 COM22    USB 串行设备 (COM22)    USB\VID_2FE3&PID_0004&MI_00\...
 ```
 
-`06-usb-dfu-transfer-update` 通过 DFU 更新成功后：
+`dfu_application.zip` 通过 DFU 更新成功后：
 
 - 应用镜像版本：`0.0.1+0`。
-- 应用运行后 `led1` 每 500 ms 翻转。
-- 当前 XIAO 板级 DTS 中，`led1` 对应红色 LED。
+- 应用运行后 红色`led1` 每 500 ms 翻转。
 
-## 烧录基线固件
+## 烧录固件 
 
-连接 J-Link 后，执行：
-
-```powershell
-& $nrfutil device program `
-  --firmware $baselineHex `
-  --serial-number $serialNumber `
-  --family nrf54l `
-  --options chip_erase_mode=ERASE_ALL,verify=VERIFY_READ
-```
-
-
-## 写入 KMU 密钥
-
-签名校验用的 key 不在 `06-USB-DFU.hex` 中。
-它通过 `keyfile.json` 写入芯片的 KMU key slot。
-
-以下场景需要执行本步骤：
-
-- 新板子首次烧录。
-- 执行过 full erase 或 recover。
-- 修改过签名 key。
-
-命令如下：
-
-```powershell
-& $nrfutil device x-provision-keys `
-  --key-file $keyFile `
-  --serial-number $serialNumber `
-  --family nrf54l
-
-& $nrfutil device reset `
-  --serial-number $serialNumber `
-  --family nrf54l
-```
-
-如果同一个 KMU key 已经写入，并且芯片没有经过会清除 KMU 的 recover 或 erase 操作，通常不需要重复写入。
+jlink烧录：06-USB-DFU.hex
 
 ## 进入 USB DFU 模式
 
@@ -159,12 +119,6 @@ COM22    USB 串行设备 (COM22)    USB\VID_2FE3&PID_0004&MI_00\...
 ```powershell
 Get-CimInstance Win32_SerialPort |
   Select-Object DeviceID, Name, PNPDeviceID
-```
-
-将实际 COM 口写入变量：
-
-```powershell
-$dfuCom = 'COM22'
 ```
 
 ## 一键执行 USB DFU
@@ -192,47 +146,9 @@ cd D:\xiao_nrf54lm20b_usb_dfu_test
 COM22
 ```
 
-如果已经知道端口号，也可以直接传入：
-
-```powershell
-cd D:\xiao_nrf54lm20b_usb_dfu_test
-.\run_usb_dfu.cmd COM22
-```
-
-也可以直接在 PowerShell 中传入端口号：
-
-```powershell
-cd D:\xiao_nrf54lm20b_usb_dfu_test
-.\run_usb_dfu.ps1 -Port COM22
-```
-
-脚本执行完成后，确认应用行为已经变成 06 固件：
+脚本执行完成后，确认应用行为已经变成更新后固件：
 
 - 红色 LED，也就是 `led1`，每 500 ms 翻转。
-
-## 手动检查 MCUmgr 连接
-
-```powershell
-& $nrfutil mcu-manager serial image-list `
-  --serial-port $dfuCom `
-  --timeout 60
-```
-
-该命令必须能够正常返回 image list，然后再执行上传。
-
-## 手动通过 USB DFU 上传 06 更新包
-
-```powershell
-& $nrfutil mcu-manager serial image-upload `
-  --serial-port $dfuCom `
-  --timeout 60 `
-  --firmware $dfuZip
-```
-
-复位后确认应用行为已经变成 06 固件：
-
-- 红色 LED，也就是 `led1`，每 500 ms 翻转。
-
 
 ## 官方参考
 
