@@ -25,7 +25,21 @@ function Resolve-NrfutilPath {
         }
     }
 
-    $fromPath = Get-Command nrfutil.exe -ErrorAction SilentlyContinue
+    $pathCommands = @(Get-Command nrfutil.exe -All -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandType -eq 'Application' })
+
+    $windowsDir = [System.IO.Path]::GetFullPath($env:WINDIR).TrimEnd('\')
+    $fromPath = $pathCommands |
+        Where-Object {
+            $source = [System.IO.Path]::GetFullPath($_.Source)
+            -not $source.StartsWith($windowsDir, [System.StringComparison]::OrdinalIgnoreCase)
+        } |
+        Select-Object -First 1
+
+    if (-not $fromPath) {
+        $fromPath = $pathCommands | Select-Object -First 1
+    }
+
     if ($fromPath) {
         return $fromPath.Source
     }
@@ -53,8 +67,6 @@ $nrfutilExe = Resolve-NrfutilPath -RequestedPath $Nrfutil
 if ([string]::IsNullOrWhiteSpace($env:NRFUTIL_HOME)) {
     if (Test-Path -LiteralPath 'C:\nrfutil\home') {
         $env:NRFUTIL_HOME = 'C:\nrfutil\home'
-    } else {
-        $env:NRFUTIL_HOME = Join-Path (Split-Path -Parent $nrfutilExe) 'home'
     }
 }
 
@@ -75,7 +87,11 @@ if ($Port -notmatch '^COM\d+$') {
 Write-Host ''
 Write-Host 'XIAO nRF54LM20B USB DFU'
 Write-Host "nrfutil: $nrfutilExe"
-Write-Host "NRFUTIL_HOME: $env:NRFUTIL_HOME"
+if ([string]::IsNullOrWhiteSpace($env:NRFUTIL_HOME)) {
+    Write-Host 'NRFUTIL_HOME: <nrfutil default>'
+} else {
+    Write-Host "NRFUTIL_HOME: $env:NRFUTIL_HOME"
+}
 Write-Host "Port: $Port"
 Write-Host "DFU package: $dfuPackage"
 

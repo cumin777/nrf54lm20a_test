@@ -192,6 +192,13 @@ cd D:\xiao_nrf54lm20b_usb_dfu_test
 COM22
 ```
 
+如果已经知道端口号，也可以直接传入：
+
+```powershell
+cd D:\xiao_nrf54lm20b_usb_dfu_test
+.\run_usb_dfu.cmd COM22
+```
+
 也可以直接在 PowerShell 中传入端口号：
 
 ```powershell
