@@ -1,0 +1,57 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include "../xiao_single_slot_partitions.dtsi"
+
+/ {
+	chosen {
+		zephyr,uart-mcumgr = &cdc_acm_uart;
+	};
+};
+
+&pmic_i2c {
+	status = "disabled";
+};
+
+&pmic {
+	status = "disabled";
+};
+
+&pmic_charger {
+	status = "disabled";
+};
+
+&imu_vdd {
+	status = "disabled";
+};
+
+&{/pmic-i2c/npm1300@6b/regulators} {
+	status = "disabled";
+};
+
+&pmic_leds {
+	status = "disabled";
+};
+
+&i2c22 {
+	status = "disabled";
+};
+
+&i2c30 {
+	status = "disabled";
+};
+
+&spi00 {
+	status = "disabled";
+};
+
+&spi23 {
+	status = "disabled";
+};
+
+&uart21 {
+	status = "disabled";
+};
+
+&adc {
+	status = "disabled";
+};

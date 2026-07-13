@@ -1,0 +1,10 @@
+/*
+ * The board normally reserves address 0 for MCUboot and links applications at
+ * slot0 (0x11000). A direct bring-up image must own the reset vector at 0x0.
+ */
+
+/ {
+	chosen {
+		zephyr,code-partition = &boot_partition;
+	};
+};

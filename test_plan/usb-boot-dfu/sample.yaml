@@ -1,0 +1,15 @@
+sample:
+  name: XIAO nRF54LM20B USB boot DFU
+common:
+  sysbuild: true
+  build_only: true
+tests:
+  sample.xiao_nrf54lm20b.usb_boot_dfu:
+    tags:
+      - dfu
+      - mcuboot
+      - usb
+    platform_allow:
+      - xiao_nrf54lm20b/nrf54lm20a/cpuapp
+    integration_platforms:
+      - xiao_nrf54lm20b/nrf54lm20a/cpuapp

@@ -1,0 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include "../xiao_single_slot_partitions.dtsi"
+
+/ {
+	chosen {
+		zephyr,boot-mode = &boot_mode0;
+	};
+};
+
+&gpregret1 {
+	status = "okay";
+
+	boot_mode0: boot_mode@0 {
+		compatible = "zephyr,retention";
+		status = "okay";
+		reg = <0x0 0x1>;
+	};
+};

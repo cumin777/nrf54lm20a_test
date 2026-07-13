@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config PARTITION_MANAGER
+	default n
+
+config MCUBOOT_SIGNATURE_USING_KMU
+	default n
+
+config MCUBOOT_GENERATE_DEFAULT_KEY_FILE
+	default n
+
+source "share/sysbuild/Kconfig"
