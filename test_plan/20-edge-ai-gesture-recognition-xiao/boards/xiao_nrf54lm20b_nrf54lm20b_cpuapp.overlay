@@ -1,0 +1,29 @@
+/*
+ * XIAO nRF54LM20B hardware adaptation for the official gesture-recognition
+ * app.  The board DTS already supplies sw0, PWM RGB LEDs and imu0.  Add the
+ * PMIC LDO1 powers the onboard LSM6DS3TR-C.  The upstream LSM6DSL driver
+ * does not consume vin-supply itself, so defer probing until the application
+ * has explicitly enabled power_en and LDO1.
+ */
+
+/ {
+	chosen {
+		/* Route Zephyr console and log backend to XIAO UART21. */
+		zephyr,console = &uart21;
+		zephyr,shell-uart = &uart21;
+	};
+};
+
+&lsm6ds3tr_c {
+	zephyr,deferred-init;
+	status = "okay";
+};
+
+&imu_vdd {
+	/delete-property/ regulator-boot-on;
+};
+
+/* This sample logs only through UART21, not USB CDC ACM. */
+&zephyr_udc0 {
+	status = "disabled";
+};
