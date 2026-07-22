@@ -8,6 +8,7 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/kernel.h>
+#include <zephyr/sys/printk.h>
 #include <dtm.h>
 
 #include "dtm_transport.h"
@@ -98,6 +99,26 @@ static K_TIMER_DEFINE(tx_auto_timer, tx_timeout_cb, NULL);
 #endif /* DT_NODE_HAS_PROP(DTM_UART, currrent_speed) */
 
 static const struct device *dtm_uart = DEVICE_DT_GET(DTM_UART);
+
+/* The test setup transmits 1000 packets; use it as the PER denominator. */
+#define DTM_EXPECTED_PACKET_COUNT 1000U
+
+static void dtm_report_packet_loss(uint16_t received)
+{
+	uint16_t lost = (received < DTM_EXPECTED_PACKET_COUNT) ?
+		(DTM_EXPECTED_PACKET_COUNT - received) : 0U;
+	uint32_t rate_tenths = (lost * 1000U) / DTM_EXPECTED_PACKET_COUNT;
+	char message[80];
+
+	snprintk(message, sizeof(message),
+		 "DTM packet loss: rx=%u/%u, lost=%u, rate=%u.%u%%\r\n",
+		 received, DTM_EXPECTED_PACKET_COUNT, lost,
+		 rate_tenths / 10U, rate_tenths % 10U);
+
+	for (char *p = message; *p != '\0'; p++) {
+		uart_poll_out(dtm_uart, *p);
+	}
+}
 
 /* DTM command codes */
 enum dtm_cmd_code {
@@ -875,6 +896,10 @@ int dtm_tr_process(union dtm_tr_packet cmd)
 
 	uart_poll_out(dtm_uart, (ret >> 8) & 0xFF);
 	uart_poll_out(dtm_uart, ret & 0xFF);
+
+	if (tmp == 0xC000U && (ret & 0xC000U) == LE_PACKET_REPORTING_EVENT) {
+		dtm_report_packet_loss(ret & 0x3FFFU);
+	}
 
 	return 0;
 }

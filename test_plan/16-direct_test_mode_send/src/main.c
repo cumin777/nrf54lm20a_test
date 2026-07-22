@@ -5,10 +5,33 @@
  */
 
 #include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/pm/device_runtime.h>
 
 #include "transport/dtm_transport.h"
+
+static const struct gpio_dt_spec status_led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
+
+static void status_led_blink_thread(void)
+{
+	if (!gpio_is_ready_dt(&status_led)) {
+		return;
+	}
+
+	if (gpio_pin_configure_dt(&status_led, GPIO_OUTPUT_INACTIVE) != 0) {
+		return;
+	}
+
+	for (;;) {
+		(void)gpio_pin_toggle_dt(&status_led);
+		k_sleep(K_MSEC(500));
+	}
+}
+
+K_THREAD_DEFINE(status_led_blink_thread_id, 512, status_led_blink_thread,
+		NULL, NULL, NULL, 7, 0, 0);
 
 int main(void)
 {
